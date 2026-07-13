@@ -17,6 +17,7 @@ Antes de lanzarlo en producción:
 """
 
 import os
+import asyncio
 import logging
 import sqlite3
 import time
@@ -305,6 +306,7 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 flask_app = Flask(__name__)
 telegram_app = None  # se asigna en main() para poder enviar mensajes desde Flask
+event_loop = None    # se asigna en main(), es el loop donde corre el bot
 
 
 @flask_app.route("/reward", methods=["GET"])
@@ -328,14 +330,13 @@ def recibir_recompensa():
     logger.info(f"Recompensa acreditada: usuario {user_id} +{PUNTOS_POR_ANUNCIO} puntos")
 
     # Notifica al usuario dentro de Telegram (opcional pero recomendado)
-    if telegram_app:
+    if telegram_app and event_loop:
         try:
-            import asyncio
             asyncio.run_coroutine_threadsafe(
                 telegram_app.bot.send_message(
                     user_id, f"✅ ¡Ganaste {PUNTOS_POR_ANUNCIO} puntos por ver el anuncio!"
                 ),
-                telegram_app.loop if hasattr(telegram_app, "loop") else asyncio.get_event_loop(),
+                event_loop,
             )
         except Exception as e:
             logger.warning(f"No se pudo notificar al usuario {user_id}: {e}")
@@ -348,8 +349,15 @@ def iniciar_servidor_flask():
 
 
 def main():
-    global telegram_app
+    global telegram_app, event_loop
     init_db()
+
+    # Crea explícitamente un event loop para este hilo.
+    # Necesario porque Python 3.12+ ya no crea uno automáticamente,
+    # lo cual rompe run_polling() de python-telegram-bot si no se hace esto.
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    event_loop = loop
 
     # Inicia el servidor Flask en un hilo separado (para no bloquear el bot)
     hilo_flask = threading.Thread(target=iniciar_servidor_flask, daemon=True)
