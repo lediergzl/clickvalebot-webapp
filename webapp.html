@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClickValeBot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e1b4b, #4338ca, #7c3aed);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  p { opacity: 0.85; margin-bottom: 24px; }
+  .coin {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+  button {
+    background: #fde047;
+    color: #92400e;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
+  }
+  button:active { opacity: 0.8; }
+  #status { margin-top: 16px; font-size: 14px; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+  <div class="coin">🪙</div>
+  <h1>ClickValeBot</h1>
+  <p>Mira el anuncio hasta el final para ganar tus puntos.</p>
+
+  <button id="verAnuncioBtn">📺 Ver anuncio</button>
+  <div id="status"></div>
+
+  <script>
+    // Verificación segura: si se abre fuera de Telegram (ej. navegador normal),
+    // esto evita que la página se rompa y muestra un aviso en consola.
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    } else {
+      console.warn("Esta página está pensada para abrirse dentro de Telegram. Fuera de Telegram funcionará en modo de prueba, sin enviar datos al bot.");
+    }
+
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("verAnuncioBtn");
+
+    btn.addEventListener("click", () => {
+      // =========================================================
+      // AQUÍ VA TU INTEGRACIÓN REAL DE ADSGRAM
+      // Adsgram te da un fragmento de código JS para inicializar
+      // el anuncio (algo como AdsgramController.show()).
+      // Cuando lo tengas, reemplaza este bloque de simulación.
+      // =========================================================
+
+      statusEl.textContent = "Cargando anuncio...";
+      btn.disabled = true;
+
+      setTimeout(() => {
+        statusEl.textContent = "✅ ¡Anuncio completado! Enviando confirmación...";
+
+        if (tg) {
+          // Envía el resultado de vuelta a tu bot (bot.py) para sumar puntos
+          tg.sendData(JSON.stringify({ accion: "anuncio_completado" }));
+          setTimeout(() => tg.close(), 1200);
+        } else {
+          statusEl.textContent += " (modo de prueba: no se envió nada al bot)";
+          btn.disabled = false;
+        }
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
